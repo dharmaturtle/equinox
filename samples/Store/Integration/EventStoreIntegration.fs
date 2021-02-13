@@ -1,4 +1,4 @@
-﻿[<AutoOpen>]
+[<AutoOpen>]
 module Samples.Store.Integration.EventStoreIntegration
 
 open Equinox.EventStore
@@ -11,6 +11,6 @@ open System
 /// (the normal external port also hosts the server metadata endpoint; with above, can see gossip info by going to http://127.0.0.1:30778/gossip)
 let connectToLocalEventStoreNode log =
     Connector("admin", "changeit", reqTimeout=TimeSpan.FromSeconds 3., reqRetries=3, log=Logger.SerilogVerbose log, tags=["I",Guid.NewGuid() |> string])
-        .Establish("Equinox-sample", Discovery.GossipDns "localhost", ConnectionStrategy.ClusterTwinPreferSlaveReads)
+        .Establish("Equinox-sample", Discovery.Uri(Uri "tcp://localhost:1113"), ConnectionStrategy.ClusterSingle NodePreference.Master)
 let defaultBatchSize = 500
 let createGesGateway connection batchSize = Context(connection, BatchingPolicy(maxBatchSize = batchSize))
