@@ -1,4 +1,4 @@
-﻿module Equinox.Store.Integration.StoreIntegration
+module Equinox.Store.Integration.StoreIntegration
 
 open Domain
 open Equinox.Integration.Infrastructure
@@ -62,6 +62,17 @@ module Cart =
     let createServiceWithCompactionAndCaching log gateway cache =
         let sliding20m = CachingStrategy.SlidingWindow (cache, TimeSpan.FromMinutes 20.)
         Cart.create log (fun (id,opt) -> Resolver(gateway, codec, fold, initial, sliding20m, AccessStrategy.RollingSnapshots snapshot).Resolve(id,?option=opt))
+
+module Nonrecord =
+    let createService log gateway =
+        let resolve id =
+            Resolver(
+                gateway,
+                Nonrecord.Events.codec,
+                Nonrecord.Fold.fold,
+                Nonrecord.Fold.State.Initial
+            ).Resolve id
+        Nonrecord.create log resolve
 
 module ContactPreferences =
     let fold, initial = Domain.ContactPreferences.Fold.fold, Domain.ContactPreferences.Fold.initial
@@ -252,6 +263,25 @@ type Tests(testOutputHelper) =
         // and reload the 24 events with a single read
         let! _ = service.Read cartId
         test <@ singleBatchBackwards @ batchBackwardsAndAppend @ singleBatchBackwards = capture.ExternalCalls @>
+    }
+
+    [<AutoData(SkipIfRequestedViaEnvironmentVariable="EQUINOX_INTEGRATION_SKIP_EVENTSTORE")>]
+    let ``Can roundtrip nonrecordtypes against EventStore``(activate: Nonrecord.Events.Snapshot) (myUmxGuid: Nonrecord.MyUmxGuid) (guid: Guid) = Async.RunSynchronously <| async {
+        let log, _ = createLoggerWithCapture ()
+        let! conn = connectToLocalStore log
+        let batchSize = 10
+        let service = createGesGateway conn batchSize |> Nonrecord.createService log
+        let myStreamId = % System.Guid.NewGuid()
+        let! _ = service.Execute(myStreamId, Nonrecord.Command.Activate activate)
+
+        let! _ = service.Execute(myStreamId, Nonrecord.Command.ChangeMyUmxGuid myUmxGuid)
+        let! _ = service.Execute(myStreamId, Nonrecord.Command.ChangeGuid guid)
+
+        let! actual = service.Read myStreamId
+        let expected : Nonrecord.Events.Snapshot =
+            { MyUmxGuid = myUmxGuid;
+              Guid = guid }
+        test <@ actual = (Nonrecord.Fold.State.Active expected) @>
     }
 
     [<AutoData(SkipIfRequestedViaEnvironmentVariable="EQUINOX_INTEGRATION_SKIP_EVENTSTORE")>]

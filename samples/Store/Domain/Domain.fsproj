@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Nonrecord.fs" />
     <Compile Include="Infrastructure.fs" />
     <Compile Include="Cart.fs" />
     <Compile Include="ContactPreferences.fs" />
@@ -22,7 +23,7 @@
     <PackageReference Include="FSharp.Core" Version="3.1.2.5" Condition=" '$(TargetFramework)' == 'net461' " />
     <PackageReference Include="FSharp.Core" Version="4.3.4" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
 
-    <PackageReference Include="FsCodec.NewtonsoftJson" Version="2.1.0" />
+    <ProjectReference Include="..\..\..\..\jet\FsCodec\src\FsCodec.NewtonsoftJson\FsCodec.NewtonsoftJson.fsproj" />
 
     <ProjectReference Include="..\..\..\src\Equinox\Equinox.fsproj" />
   </ItemGroup>
