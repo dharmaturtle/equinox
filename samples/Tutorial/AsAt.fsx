@@ -1,6 +1,6 @@
-﻿// Example of using the FsCodec up/down conversion mechanism to access the underlying `Index` of the event in the stream
+// Example of using the FsCodec up/down conversion mechanism to access the underlying `Index` of the event in the stream
 //   in order to be able to query to obtain an as-at balance
-// For a more realistic and detailed example, see https://andrewcmeier.com/bi-temporal-event-sourcing
+// For a more realistic and detailed example, see https://andrewmeier.dev/bi-temporal-event-sourcing
 
 // NOTES
 // - relying on the Index in a model in this manner is in no way common practice (the above tutorial uses first class
